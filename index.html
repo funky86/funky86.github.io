@@ -111,9 +111,9 @@
         },
         methods: {
           handleConditionsChange(radioButton) {
-            var fieldId = radioButton.target.id.replace("conditions", "consumption");
-            console.log(fieldId);
-            this.consumption = this.consumptionData[fieldId];
+            var consumptionAttributeId = radioButton.target.id.replace("conditions", "consumption");
+            this.consumption = this.consumptionData[consumptionAttributeId];
+            this.realRange = (this.usableBattery / this.consumption * 1000).toFixed(0);
 
             this.handleCalculate();
           },
