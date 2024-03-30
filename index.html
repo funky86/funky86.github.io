@@ -88,11 +88,12 @@
 
         <p>Consumption: {{ consumption }} Wh/km</p>
         <p>Usable battery: {{ usableBattery }} kWh</p>
-        <p>Real range: {{ realRange }} km</p>
+        <p>Real range per charge: {{ realRange }} km</p>
         <p>Cost for a distance of {{ distance }} km:</p>
         <ul>
           <li>Charging cost: {{ distanceChargingCost }} €</li>
           <li>Energy used: {{ distanceEnergyCost }} kWh</li>
+          <li>Needed full charges: {{ distanceFullChargesNeeded }} times</li>
         </ul>
       </form>
     </div>
@@ -103,18 +104,24 @@
           return {
             carsDropdownObject: null,
 
+            // car data
             usableBattery: null,
             realRange: null,
             consumption: null,
             consumptionData: [],
 
+            // conditions
             chosenConditionsTitle: "Average",
             chosenConditionsClass: "",
 
+            // user input
             electricityPrice: null,
             distance: null,
+
+            // cost result
             distanceChargingCost: 0,
-            distanceEnergyCost: 0
+            distanceEnergyCost: 0,
+            distanceFullChargesNeeded: 0
           }
         },
         methods: {
@@ -134,6 +141,7 @@
           handleCalculateCost() {
             this.distanceChargingCost = (this.consumption*0.001 * this.distance * this.electricityPrice).toFixed(2);
             this.distanceEnergyCost = (this.consumption*0.001 * this.distance).toFixed(2);
+            this.distanceFullChargesNeeded = (this.consumption*0.001 * this.distance / this.usableBattery).toFixed(1);
           },
           handleCarReset() {
             this.usableBattery = null;
@@ -154,8 +162,9 @@
           resetCostResult() {
             this.distanceChargingCost = 0;
             this.distanceEnergyCost = 0;
+            this.distanceFullChargesNeeded = 0;
           },
-          setFormData(carData) {
+          setCarData(carData) {
             this.usableBattery = carData.usableBattery;
             this.realRange = carData.realRange;
             this.consumption = carData.consumptionAverage;
@@ -390,7 +399,7 @@
           threshold: 1,
           onSelectItem: ({label, value}) => {
               vm.resetConditionsDropdown();
-              vm.setFormData(carsData[value]);
+              vm.setCarData(carsData[value]);
           }
       });
 
