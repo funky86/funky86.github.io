@@ -39,7 +39,7 @@
           </div>
           <div class="col">
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="Price for kWh from your electricity bill" id="electricityPrice" v-model.number="electricityPrice" @input="handleCalculate">
+              <input type="text" class="form-control" placeholder="Price for kWh from your electricity bill" id="electricityPrice" v-model.number="electricityPrice" @input="handleCalculateCost">
               <span class="input-group-text">€/kWh</span>
             </div>
           </div>
@@ -51,7 +51,7 @@
           </div>
           <div class="col">
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="Travel distance" id="distance" v-model.number="distance" @input="handleCalculate">
+              <input type="text" class="form-control" placeholder="Travel distance" id="distance" v-model.number="distance" @input="handleCalculateCost">
               <span class="input-group-text">km</span>
             </div>
           </div>
@@ -63,27 +63,22 @@
           </div>
 
           <div class="col">
-            <div class="btn-group" role="group">
-              <input type="radio" class="btn-check" name="conditions" id="conditionsAverage" autocomplete="off" @change="handleConditionsChange" checked>
-              <label class="btn btn-primary" for="conditionsAverage">Average</label>
-              
-              <input type="radio" class="btn-check" name="conditions" id="conditionsMildWeatherCity" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsMildWeatherCity"><span class="bi bi-sun-fill"></span> City</label>
-    
-              <input type="radio" class="btn-check" name="conditions" id="conditionsMildWeatherHighway" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsMildWeatherHighway"><span class="bi bi-sun-fill"></span> Highway</label>
-    
-              <input type="radio" class="btn-check" name="conditions" id="conditionsMildWeatherCombined" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsMildWeatherCombined"><span class="bi bi-sun-fill"></span> Combined</label>
-    
-              <input type="radio" class="btn-check" name="conditions" id="conditionsColdWeatherCity" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsColdWeatherCity"><span class="bi bi-snow"></span> City</label>
-    
-              <input type="radio" class="btn-check" name="conditions" id="conditionsColdWeatherHighway" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsColdWeatherHighway"><span class="bi bi-snow"></span> Highway</label>
-    
-              <input type="radio" class="btn-check" name="conditions" id="conditionsColdWeatherCombined" autocomplete="off" @change="handleConditionsChange">
-              <label class="btn btn-primary" for="conditionsColdWeatherCombined"><span class="bi bi-snow"></span> Combined</label>
+            <div class="dropdown">
+              <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                <span :class="chosenConditionsClass"></span> {{ chosenConditionsTitle }}
+              </button>
+
+              <ul class="dropdown-menu">
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionAverage', 'Average', '')">Average</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCity', 'City', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> City</a></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherHighway', 'Highway', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Highway</a></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCombined', 'Combined', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Combined</a></li>
+                <li><hr class="dropdown-divider"></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCity', 'City', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> City</a></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherHighway', 'Highway', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Highway</a></li>
+                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCombined', 'Combined', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Combined</a></li>
+              </ul>
             </div>
           </div>
         </div>
@@ -105,7 +100,9 @@
           return {
             usableBattery: null,
             realRange: null,
-            consumptionData: null,
+            consumptionData: [],
+            chosenConditionsTitle: "Average",
+            chosenConditionsClass: "",
 
             consumption: null,
             electricityPrice: null,
@@ -115,16 +112,26 @@
           }
         },
         methods: {
-          handleConditionsChange(radioButton) {
-            var consumptionAttributeId = radioButton.target.id.replace("conditions", "consumption");
+          handleConditionsChange(consumptionAttributeId, chosenConditionsTitle, chosenConditionsClass) {
+            console.log("handleConditionsChange() consumptionAttributeId=" + consumptionAttributeId);
+
+            if (this.usableBattery == null) return;
+
+            this.chosenConditionsTitle = chosenConditionsTitle;
+            this.chosenConditionsClass = chosenConditionsClass;
+
             this.consumption = this.consumptionData[consumptionAttributeId];
             this.realRange = (this.usableBattery / this.consumption * 1000).toFixed(0);
 
-            this.handleCalculate();
+            this.handleCalculateCost();
           },
-          handleCalculate() {
+          handleCalculateCost() {
             this.distanceChargingCost = (this.consumption*0.001 * this.distance * this.electricityPrice).toFixed(2);
             this.distanceEnergyCost = (this.consumption*0.001 * this.distance).toFixed(2);
+          },
+          resetConditionsDropdown() {
+            this.chosenConditionsTitle = 'Average';
+            this.chosenConditionsClass = '';
           },
           setFormData(carData) {
             this.usableBattery = carData.usableBattery;
@@ -140,7 +147,7 @@
               "consumptionMildWeatherCombined": carData.consumptionMildWeatherCombined,
             };
 
-            this.handleCalculate();
+            this.handleCalculateCost();
           }
         }
       });
@@ -360,6 +367,7 @@
           maximumItems: 5,
           threshold: 1,
           onSelectItem: ({label, value}) => {
+              vm.resetConditionsDropdown();
               vm.setFormData(carsData[value]);
           }
       });
