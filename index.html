@@ -29,7 +29,10 @@
             <label for="carsDropdown" class="col-form-label">Car:</label>
           </div>
           <div class="col">
-            <input type="text" class="form-control" placeholder="Star typing car brand and model ..." id="carsDropdown" autocomplete="off">
+            <div class="input-group">
+              <input type="text" class="form-control" placeholder="Star typing car brand and model ..." id="carsDropdown" autocomplete="off">
+              <button type="button" class="btn btn-primary" @click="handleCarReset()">reset</button>
+            </div>
           </div>
         </div>
 
@@ -98,13 +101,16 @@
       const app = Vue.createApp({
         data() {
           return {
+            carsDropdownObject: null,
+
             usableBattery: null,
             realRange: null,
+            consumption: null,
             consumptionData: [],
+
             chosenConditionsTitle: "Average",
             chosenConditionsClass: "",
 
-            consumption: null,
             electricityPrice: null,
             distance: null,
             distanceChargingCost: 0,
@@ -129,9 +135,25 @@
             this.distanceChargingCost = (this.consumption*0.001 * this.distance * this.electricityPrice).toFixed(2);
             this.distanceEnergyCost = (this.consumption*0.001 * this.distance).toFixed(2);
           },
+          handleCarReset() {
+            this.usableBattery = null;
+            this.realRange = null;
+            this.consumption = null;
+            this.consumptionData = [];
+            
+            this.carsDropdownObject.field.value = ""; // delete car text in the dropdown
+
+            this.resetCostResult();
+
+            this.resetConditionsDropdown();
+          },
           resetConditionsDropdown() {
             this.chosenConditionsTitle = 'Average';
             this.chosenConditionsClass = '';
+          },
+          resetCostResult() {
+            this.distanceChargingCost = 0;
+            this.distanceEnergyCost = 0;
           },
           setFormData(carData) {
             this.usableBattery = carData.usableBattery;
@@ -362,7 +384,7 @@
       }
 
       const carsDropdownField = document.getElementById('carsDropdown');
-      const ac = new Autocomplete(carsDropdownField, {
+      vm.carsDropdownObject = new Autocomplete(carsDropdownField, {
           data: [{label: "I'm a label", value: 42}],
           maximumItems: 5,
           threshold: 1,
@@ -372,7 +394,7 @@
           }
       });
 
-      ac.setData(carsDataDropdown);
+      vm.carsDropdownObject.setData(carsDataDropdown);
     </script>
   </body>
 </html>
