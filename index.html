@@ -32,7 +32,7 @@
           </div>
           <div class="col">
             <div class="input-group">
-              <input type="text" class="form-control" placeholder="Star typing car brand and model ..." id="carsDropdown" autocomplete="off">
+              <input type="text" class="form-control" placeholder="Star typing brand and model ..." id="carsDropdown" autocomplete="off">
               <button type="button" class="btn btn-primary" @click="handleCarReset()">reset</button>
             </div>
           </div>
@@ -62,7 +62,7 @@
           </div>
         </div>
 
-        <div class="mb-3 row">
+        <div class="mb-3 row" v-if="consumptionData.containsConditionsData == true">
           <div class="col-sm-2">
             <label for="conditions" class="col-form-label">Conditions:</label>
           </div>
@@ -95,7 +95,7 @@
         <ul>
           <li>Charging cost: {{ distanceChargingCost }} €</li>
           <li>Energy used: {{ distanceEnergyCost }} kWh</li>
-          <li>Needed full charges: {{ distanceFullChargesNeeded }} times</li>
+          <li>Full charges: {{ distanceFullChargesNeeded }} times</li>
         </ul>
       </form>
     </div>
@@ -172,6 +172,7 @@
             this.consumption = carData.consumptionAverage;
             this.consumptionData = {
               "consumptionAverage": carData.consumptionAverage,
+              "containsConditionsData": 'consumptionColdWeatherCity' in carData, // true if it contains weather conditions data
               "consumptionColdWeatherCity": carData.consumptionColdWeatherCity,
               "consumptionColdWeatherHighway": carData.consumptionColdWeatherHighway,
               "consumptionColdWeatherCombined": carData.consumptionColdWeatherCombined,
