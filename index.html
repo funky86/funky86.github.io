@@ -18,6 +18,16 @@
           }
         }
     </script>
+
+    <style type="text/css">
+      body {
+        font-size: 0.975em;
+      }
+
+      .car-source-text {
+        font-size: 0.75em;
+      }
+    </style>
   </head>
 
   <body>
@@ -88,6 +98,7 @@
           </div>
         </div>
 
+        <p v-if="evDatabaseUrl != null" class="car-source-text">Source: <a :href=evDatabaseUrl target="_blank">{{ model }}</a> (EV Database)</p>
         <p>Consumption: {{ consumption }} Wh/km</p>
         <p>Usable battery: {{ usableBattery }} kWh</p>
         <p>Real range per charge: {{ realRange }} km</p>
@@ -107,6 +118,8 @@
             carsDropdownObject: null,
 
             // car data
+            model: null,
+            evDatabaseUrl: null,
             usableBattery: null,
             realRange: null,
             consumption: null,
@@ -146,6 +159,8 @@
             this.distanceFullChargesNeeded = (this.consumption*0.001 * this.distance / this.usableBattery).toFixed(1);
           },
           handleCarReset() {
+            this.model = null;
+            this.evDatabaseUrl = null;
             this.usableBattery = null;
             this.realRange = null;
             this.consumption = null;
@@ -167,6 +182,8 @@
             this.distanceFullChargesNeeded = 0;
           },
           setCarData(carData) {
+            this.model = carData.model;
+            this.evDatabaseUrl = carData.evDatabaseUrl;
             this.usableBattery = carData.usableBattery;
             this.realRange = carData.realRange;
             this.consumption = carData.consumptionAverage;
@@ -364,13 +381,14 @@
 
       var carsDataDropdown = []; 
       for (var i = 0; i < carsData.length; i++) {
-        carsDataDropdown[i] = { "label": carsData[i].label, "value": i };
+        var label = carsData[i].model + " (" + carsData[i].year + ")";
+        carsDataDropdown[i] = { "label": label, "value": i };
       }
 
       const carsDropdownField = document.getElementById('carsDropdown');
       vm.carsDropdownObject = new Autocomplete(carsDropdownField, {
           data: [{label: "I'm a label", value: 42}],
-          maximumItems: 5,
+          maximumItems: 12,
           threshold: 1,
           onSelectItem: ({label, value}) => {
               vm.resetConditionsDropdown();
