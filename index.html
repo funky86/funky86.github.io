@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <title>EV Home Charging Cost Calculator</title>
+    <title>My EV buddy</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
@@ -20,94 +20,198 @@
     </script>
 
     <style type="text/css">
-      body {
-        font-size: 0.975em;
+      /* Custom classes */
+      .gray-text {
+        color:rgb(154, 154, 154);
+      }
+
+      .green-text {
+        color: rgb(122, 199, 128);
       }
 
       .car-source-text {
         font-size: 0.75em;
       }
+
+      .result-div {
+        background-color: rgb(16, 17, 18);
+      }
+
+      .car-data-title {
+        font-size: 0.8em;
+      }
+
+      .car-data-text {
+        font-size: 1.05sem;
+        font-weight: bold;
+      }
+
+      /* Bootstrap theme */
+      body {
+        font-size: 0.975em;
+        background-color:rgb(39, 40, 42);
+        color: rgb(245, 245, 245);
+        font-family: Verdana; /* Choose a modern font */
+      }
+
+      /* Navbar */
+      .navbar {
+        background-color: #222;
+      }
+
+      .navbar-brand {
+        color: rgb(245, 245, 245);
+      }
+
+      .nav-link {
+        color: rgb(245, 245, 245);
+      }
+
+      /* Buttons */
+      .btn {
+        background-color: #333;
+        color: rgb(245, 245, 245);
+        border-color: #333;
+      }
+
+      .btn:hover {
+        background-color: #555;
+        border-color: #555;
+      }
+
+      /* Forms */
+      .form-control {
+        background-color: #939393;
+        color: rgb(245, 245, 245);
+      }
+
+      /* Cards */
+      .card {
+        background-color: #333;
+        color: rgb(245, 245, 245);
+        border-color: #333;
+      }
+
+      .card-header {
+        background-color: #222;
+      }
+
+      .card-footer {
+        background-color: #222;
+      }
+
+      .container {
+        padding: 12px;
+      }
+
+      /* Typography */
+      h1, h2, h3, h4, h5, h6 {
+        color: rgb(245, 245, 245);
+        font-weight: bold;
+      }
     </style>
   </head>
 
   <body>
-    <div id="app" class="container">
-      <h1>EV Home Charging Cost Calculator</h1>
+    <div id="app">
+      <div class="container">
+        <h4>My EV buddy</h4>
 
-      <form>
+        <form>
 
-        <div class="mb-3 row">
-          <div class="col-sm-2">
-            <label for="carsDropdown" class="col-form-label">Car:</label>
+          <div class="mb-3 row">
+            <div class="col-sm-2">
+              <label for="carsDropdown" class="col-form-label">Car:</label>
+            </div>
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Star typing brand and model ..." id="carsDropdown" autocomplete="off">
+                <button type="button" class="btn btn-primary" @click="handleCarReset()">Reset</button>
+              </div>
+            </div>
           </div>
-          <div class="col">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Star typing brand and model ..." id="carsDropdown" autocomplete="off">
-              <button type="button" class="btn btn-primary" @click="handleCarReset()">reset</button>
+
+          <div class="mb-3 row">
+            <div class="col-sm-2">
+              <label for="electricityPrice" class="col-form-label">Electricity price:</label>
+            </div>
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Price for kWh from your electricity bill" id="electricityPrice" v-model.number="electricityPrice" @input="handleCalculateCost">
+                <span class="input-group-text">€/kWh</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 row">
+            <div class="col-sm-2">
+              <label for="distance" class="col-form-label">Distance:</label>
+            </div>
+            <div class="col">
+              <div class="input-group">
+                <input type="text" class="form-control" placeholder="Travel distance" id="distance" v-model.number="distance" @input="handleCalculateCost">
+                <span class="input-group-text">km</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mb-3 row" v-if="consumptionData.containsConditionsData == true">
+            <div class="col-sm-2">
+              <label for="conditions" class="col-form-label">Conditions:</label>
+            </div>
+
+            <div class="col">
+              <div class="dropdown">
+                <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                  <span :class="chosenConditionsClass"></span> {{ chosenConditionsTitle }}
+                </button>
+
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionAverage', 'Average', '')">Average</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCity', 'City', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> City</a></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherHighway', 'Highway', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Highway</a></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCombined', 'Combined', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Combined</a></li>
+                  <li><hr class="dropdown-divider"></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCity', 'City', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> City</a></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherHighway', 'Highway', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Highway</a></li>
+                  <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCombined', 'Combined', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Combined</a></li>
+                </ul>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="mb-3 row">
-          <div class="col-sm-2">
-            <label for="electricityPrice" class="col-form-label">Electricity price:</label>
+        <div class="container">
+          <div class="row gray-text car-data-title">
+            <div class="col">Consumption</div>
+            <div class="col">Usable battery</div>
+            <div class="col">Range per charge</div>
           </div>
-          <div class="col">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Price for kWh from your electricity bill" id="electricityPrice" v-model.number="electricityPrice" @input="handleCalculateCost">
-              <span class="input-group-text">€/kWh</span>
-            </div>
+          <div v-if="model != null" class="row car-data-text">
+            <div class="col">{{ consumption }} Wh/km</div>
+            <div class="col">{{ usableBattery }} kWh</div>
+            <div class="col">{{ realRange }} km</div>
           </div>
+          
+          <br>
+          
+          <p v-if="model != null" class="gray-text car-source-text mb-1">Source: <a :href=evDatabaseUrl target="_blank">{{ model }}</a> (EV Database)</p>
         </div>
 
-        <div class="mb-3 row">
-          <div class="col-sm-2">
-            <label for="distance" class="col-form-label">Distance:</label>
-          </div>
-          <div class="col">
-            <div class="input-group">
-              <input type="text" class="form-control" placeholder="Travel distance" id="distance" v-model.number="distance" @input="handleCalculateCost">
-              <span class="input-group-text">km</span>
-            </div>
-          </div>
-        </div>
+        <div class="container result-div">
+          <p class="green-text">COST FOR A DISTANCE OF {{ distance }} km</p>
 
-        <div class="mb-3 row" v-if="consumptionData.containsConditionsData == true">
-          <div class="col-sm-2">
-            <label for="conditions" class="col-form-label">Conditions:</label>
+          <div class="mb-3 row">
+            <div class="col"><span class="bi bi-cash-coin"></span> cost:</div> <div class="col">{{ distanceChargingCost }} €</div>
           </div>
-
-          <div class="col">
-            <div class="dropdown">
-              <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown">
-                <span :class="chosenConditionsClass"></span> {{ chosenConditionsTitle }}
-              </button>
-
-              <ul class="dropdown-menu">
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionAverage', 'Average', '')">Average</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCity', 'City', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> City</a></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherHighway', 'Highway', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Highway</a></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionMildWeatherCombined', 'Combined', ['bi', 'bi-sun-fill'])"><span class="bi bi-sun-fill"></span> Combined</a></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCity', 'City', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> City</a></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherHighway', 'Highway', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Highway</a></li>
-                <li><a class="dropdown-item" @click="handleConditionsChange('consumptionColdWeatherCombined', 'Combined', ['bi', 'bi-snow'])"><span class="bi bi-snow"></span> Combined</a></li>
-              </ul>
-            </div>
+          <div class="mb-3 row">
+            <div class="col"><span class="bi bi-battery-charging"></span> Energy used:</div> <div class="col">{{ distanceEnergyCost }} kWh</div>
+          </div>
+          <div class="mb-3 row">
+            <div class="col"><span class="bi bi-ev-station-fill"></span> Full charges:</div> <div class="col">{{ distanceFullChargesNeeded }} times</div>
           </div>
         </div>
-
-        <p v-if="evDatabaseUrl != null" class="car-source-text">Source: <a :href=evDatabaseUrl target="_blank">{{ model }}</a> (EV Database)</p>
-        <p>Consumption: {{ consumption }} Wh/km</p>
-        <p>Usable battery: {{ usableBattery }} kWh</p>
-        <p>Real range per charge: {{ realRange }} km</p>
-        <p>Cost for a distance of {{ distance }} km:</p>
-        <ul>
-          <li>Charging cost: {{ distanceChargingCost }} €</li>
-          <li>Energy used: {{ distanceEnergyCost }} kWh</li>
-          <li>Full charges: {{ distanceFullChargesNeeded }} times</li>
-        </ul>
       </form>
     </div>
 
